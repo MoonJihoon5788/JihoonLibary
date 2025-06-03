@@ -30,7 +30,7 @@ public class Book {
     @Column(nullable = false, length = 20)
     private String publisher;
     @Column(nullable = false)
-    private LocalDate publication_year;
+    private LocalDate publicationYear;
     @Column(nullable = false)
     private Integer price;
     //도서 상태
@@ -40,4 +40,22 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Loan> loans = new ArrayList<>();
+
+    public void updateBook(String title, String author, String publisher,
+                               LocalDate publicationYear, Integer price) {
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.publicationYear = publicationYear;
+        this.price = price;
+    }
+
+    public void updateStatus(Character status) {
+        this.status = status;
+    }
+
+    public boolean isAvailable() {
+        return this.status.equals('A');
+    }
+
 }
