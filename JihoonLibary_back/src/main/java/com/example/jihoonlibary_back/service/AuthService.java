@@ -29,7 +29,7 @@ public class AuthService {
     public TokenDto login(LoginDto loginDto) {
         Optional<Member> optionalMember = memberRepository.findByLoginId(loginDto.getLoginId());
         if (optionalMember.isEmpty()) {
-            throw new IllegalArgumentException("이미 등록된 아이디 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 아이디 입니다.");
         }
         Member member = optionalMember.get();
         if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {

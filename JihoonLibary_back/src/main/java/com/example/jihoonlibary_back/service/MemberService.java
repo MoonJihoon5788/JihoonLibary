@@ -32,7 +32,7 @@ public class MemberService {
         if (optionalMember.isPresent()) {
             throw new IllegalArgumentException("이미 등록된 아이디 입니다.");
         }
-        Optional<Member> optionalMember1 = memberRepository.findByLoginId(memberJoinDto.getPhone());
+        Optional<Member> optionalMember1 = memberRepository.findByPhone(memberJoinDto.getPhone());
         if (optionalMember1.isPresent()) {
             throw new IllegalArgumentException("이미 등록된 전화번호 입니다.");
         }
