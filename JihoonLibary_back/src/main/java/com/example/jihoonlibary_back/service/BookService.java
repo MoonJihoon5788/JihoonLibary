@@ -84,4 +84,25 @@ public class BookService {
         }
         bookRepository.delete(book);
     }
+
+    // 도서 상세 검색
+    public BookDto getBook(Long bookId) {
+        Optional<Book> optionalBook = bookRepository.findById(bookId);
+        if (optionalBook.isEmpty()){
+            throw new IllegalArgumentException("책을 찾을 수 없습니다.");
+        }
+        Book book = optionalBook.get();
+
+
+        return BookDto.builder().
+                id(book.getId()).
+                title(book.getTitle()).
+                author(book.getAuthor()).
+                publisher(book.getPublisher()).
+                publicationYear(book.getPublicationYear()).
+                price(book.getPrice()).
+                status(book.getStatus()).
+                isLoaned(book.isAvailable())
+                .build();
+    }
 }

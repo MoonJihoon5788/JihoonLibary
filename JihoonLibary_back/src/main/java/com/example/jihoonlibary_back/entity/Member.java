@@ -34,4 +34,14 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Loan> loans = new ArrayList<>();
+
+    public void updateMember(String phone, String memo, String role) {
+        this.phone = phone;
+        this.memo = memo;
+        this.role = role;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }
