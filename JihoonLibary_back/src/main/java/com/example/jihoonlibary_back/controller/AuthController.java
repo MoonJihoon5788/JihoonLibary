@@ -1,6 +1,7 @@
 package com.example.jihoonlibary_back.controller;
 
 import com.example.jihoonlibary_back.dto.LoginDto;
+import com.example.jihoonlibary_back.dto.RefreshTokenRequestDto;
 import com.example.jihoonlibary_back.dto.TokenDto;
 import com.example.jihoonlibary_back.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenDto> refresh(@RequestHeader("Authorization") String refreshToken) {
+    public ResponseEntity<TokenDto> refresh(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         try {
-            String token = refreshToken.substring(7); // "Bearer " 제거
-            TokenDto tokenDto = authService.refreshToken(token);
+            TokenDto tokenDto = authService.refreshToken(refreshTokenRequestDto.getRefreshToken());
             return ResponseEntity.ok(tokenDto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -36,10 +36,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String refreshToken) {
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         try {
-            String token = refreshToken.substring(7);
-            authService.logout(token);
+            authService.logout(refreshTokenRequestDto.getRefreshToken());
             return ResponseEntity.ok().body("로그아웃 성공");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("로그아웃 실패: " + e.getMessage());
