@@ -25,7 +25,6 @@ public class Loan {
     @Column(nullable = false)
     private LocalDate returnDate; //반납 예정일
 
-    @Column(nullable = false)
     private LocalDate realReturnDate; // 실제 반납일
 
     // 반납 상태 'L'oan 'O'ver 'R'eturn
