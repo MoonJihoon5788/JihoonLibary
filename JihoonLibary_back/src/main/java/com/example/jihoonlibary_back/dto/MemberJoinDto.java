@@ -7,6 +7,7 @@ import lombok.*;
 public class MemberJoinDto {
     private String loginId;
     private String password;
+    private String name;
     private String phone;
     private String memo;
     private String role;

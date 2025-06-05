@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class MemberDto {
     private Long id;
     private String loginId;
+    private String name;
     private String phone;
     private String memo;
     private String role;

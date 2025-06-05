@@ -39,6 +39,7 @@ public class MemberService {
         Member member = Member.builder()
                 .loginId(memberJoinDto.getLoginId())
                 .password(passwordEncoder.encode(memberJoinDto.getPassword()))
+                .name(memberJoinDto.getName())
                 .phone(memberJoinDto.getPhone())
                 .memo(memberJoinDto.getMemo())
                 .role(memberJoinDto.getRole() != null ? memberJoinDto.getRole() : "USER")
@@ -46,6 +47,7 @@ public class MemberService {
         Member save = memberRepository.save(member);
         return MemberDto.builder().
                 id(save.getId()).
+                name(save.getName()).
                 phone(save.getPhone()).
                 loginId(save.getLoginId()).
                 memo(save.getMemo()).
@@ -60,15 +62,30 @@ public class MemberService {
             throw new IllegalArgumentException("사용자를 찾을수 없습니다.");
         }
         Member member = optionalMember.get();
+
+        if (memberUpdateDto.getLoginId() != null && !memberUpdateDto.getLoginId().equals(member.getLoginId())) {
+            Optional<Member> existingMemberByLoginId = memberRepository.findByLoginId(memberUpdateDto.getLoginId());
+            if (existingMemberByLoginId.isPresent() && !existingMemberByLoginId.get().getId().equals(memberId)) {
+                throw new IllegalArgumentException("이미 등록된 아이디입니다.");
+            }
+        }
+
         // 전화번호 중복 체크
         if (memberUpdateDto.getPhone() != null && !memberUpdateDto.getPhone().equals(member.getPhone())) {
-            Optional<Member> existingMember = memberRepository.findByPhone(memberUpdateDto.getPhone());
-            if (existingMember.isPresent() && !existingMember.get().getId().equals(memberId)) {
+            Optional<Member> existingMemberByPhone = memberRepository.findByPhone(memberUpdateDto.getPhone());
+            if (existingMemberByPhone.isPresent() && !existingMemberByPhone.get().getId().equals(memberId)) {
                 throw new IllegalArgumentException("이미 등록된 전화번호입니다.");
             }
         }
+
+        // 비밀번호
+        if (memberUpdateDto.getPassword() != null && !memberUpdateDto.getPassword().trim().isEmpty()) {
+            member.updatePassword(passwordEncoder.encode(memberUpdateDto.getPassword()));
+        }
+
         // 정보 업데이트
         member.updateMember(
+                memberUpdateDto.getLoginId() != null ? memberUpdateDto.getLoginId() : member.getLoginId(),
                 memberUpdateDto.getPhone() != null ? memberUpdateDto.getPhone() : member.getPhone(),
                 memberUpdateDto.getMemo() != null ? memberUpdateDto.getMemo() : member.getMemo(),
                 memberUpdateDto.getRole() != null ? memberUpdateDto.getRole() : member.getRole()
@@ -102,21 +119,20 @@ public class MemberService {
 
 
     private MemberResponseDto convertToDto(Member member) {
-        // 현재 대출 중인 도서 수 계산
+        // 현재 대출 중인 도서 수와 연체 여부 계산
         int currentLoans = 0;
+        boolean hasOverdueBooks = false;
+
         for (Loan loan : member.getLoans()) {
-            if (loan.getStatus() == 'L') {
+            if (loan.currentLoan()) {
                 currentLoans++;
             }
-        }
-        // 연체 도서 있는지 확인
-        boolean overdueBooks = false;
-        for (Loan loan : member.getLoans()) {
-            if (loan.getStatus() == 'L' && loan.getReturnDate().isBefore(LocalDate.now())) {
-                overdueBooks = true;
-                break;
+            
+            if (loan.isOverdue()) {
+                hasOverdueBooks = true;
             }
         }
+
         return MemberResponseDto.builder()
                 .id(member.getId())
                 .loginId(member.getLoginId())
@@ -124,7 +140,7 @@ public class MemberService {
                 .memo(member.getMemo())
                 .role(member.getRole())
                 .currentLoans(currentLoans)
-                .hasOverdueBooks(overdueBooks)
+                .hasOverdueBooks(hasOverdueBooks)
                 .build();
     }
 }

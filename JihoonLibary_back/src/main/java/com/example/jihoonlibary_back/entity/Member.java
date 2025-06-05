@@ -37,7 +37,9 @@ public class Member {
     @Builder.Default
     private List<Loan> loans = new ArrayList<>();
 
-    public void updateMember(String phone, String memo, String role) {
+
+    public void updateMember(String loginId, String phone, String memo, String role) {
+        this.loginId = loginId;
         this.phone = phone;
         this.memo = memo;
         this.role = role;
