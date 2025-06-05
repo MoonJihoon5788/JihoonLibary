@@ -2,10 +2,15 @@ package com.example.jihoonlibary_back.service;
 
 import com.example.jihoonlibary_back.dto.BookCreateDto;
 import com.example.jihoonlibary_back.dto.BookDto;
+import com.example.jihoonlibary_back.dto.BookSearchDto;
 import com.example.jihoonlibary_back.dto.BookUpdateDto;
 import com.example.jihoonlibary_back.entity.Book;
 import com.example.jihoonlibary_back.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,16 +34,7 @@ public class BookService {
                 .build();
 
         Book savedBook = bookRepository.save(book);
-        return BookDto.builder().
-                id(savedBook.getId()).
-                title(savedBook.getTitle()).
-                author(savedBook.getAuthor()).
-                publisher(savedBook.getPublisher()).
-                publicationYear(savedBook.getPublicationYear()).
-                price(savedBook.getPrice()).
-                status(savedBook.getStatus()).
-                isLoaned(false)
-                .build();
+        return convertToDto(savedBook);
     }
 
     public BookDto updateBook(Long bookId, BookUpdateDto bookUpdateDto) {
@@ -58,16 +54,7 @@ public class BookService {
         );
 
         Book savedBook = bookRepository.save(book);
-        return BookDto.builder().
-                id(savedBook.getId()).
-                title(savedBook.getTitle()).
-                author(savedBook.getAuthor()).
-                publisher(savedBook.getPublisher()).
-                publicationYear(savedBook.getPublicationYear()).
-                price(savedBook.getPrice()).
-                status(savedBook.getStatus()).
-                isLoaned(savedBook.isAvailable())
-                .build();
+        return convertToDto(savedBook);
     }
 
     // 도서 삭제
@@ -86,6 +73,7 @@ public class BookService {
     }
 
     // 도서 상세 검색
+    @Transactional(readOnly = true)
     public BookDto getBook(Long bookId) {
         Optional<Book> optionalBook = bookRepository.findById(bookId);
         if (optionalBook.isEmpty()){
@@ -93,16 +81,90 @@ public class BookService {
         }
         Book book = optionalBook.get();
 
+        return convertToDto(book);
+    }
 
-        return BookDto.builder().
-                id(book.getId()).
-                title(book.getTitle()).
-                author(book.getAuthor()).
-                publisher(book.getPublisher()).
-                publicationYear(book.getPublicationYear()).
-                price(book.getPrice()).
-                status(book.getStatus()).
-                isLoaned(book.isAvailable())
+    // 도서 목록 조회 (페이징)
+    @Transactional(readOnly = true)
+    public Page<BookDto> getBooks(Pageable pageable) {
+        // 정렬 정보가 있다면 필드명 매핑 적용
+        if (pageable.getSort().isSorted()) {
+            Sort mappedSort = Sort.unsorted();
+            for (Sort.Order order : pageable.getSort()) {
+                String mappedField = mapSortField(order.getProperty());
+                mappedSort = mappedSort.and(Sort.by(order.getDirection(), mappedField));
+            }
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
+        }
+
+        Page<Book> books = bookRepository.findAll(pageable);
+        return books.map(this::convertToDto);
+    }
+
+
+    // 도서 검색
+    @Transactional(readOnly = true)
+    public Page<BookDto> searchBooks(BookSearchDto searchDto) {
+        // 정렬 필드명 매핑
+        String sortField = mapSortField(searchDto.getSortBy());
+
+        // 정렬 설정
+        Sort sort = Sort.by(
+                searchDto.getSortDirection().equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortField
+        );
+
+        Pageable pageable = PageRequest.of(searchDto.getPage(), searchDto.getSize(), sort);
+
+        Page<Book> books;
+        String keyword = searchDto.getKeyword();
+
+        switch (searchDto.getSearchType()) {
+            case "title":
+                books = bookRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+                break;
+            case "author":
+                books = bookRepository.findByAuthorContainingIgnoreCase(keyword, pageable);
+                break;
+            case "publisher":
+                books = bookRepository.findByPublisherContainingIgnoreCase(keyword, pageable);
+                break;
+            default: // "all"
+                books = bookRepository.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+                        keyword, keyword, keyword, pageable);
+                break;
+        }
+
+        return books.map(this::convertToDto);
+    }
+
+    private String mapSortField(String sortBy) {
+        switch (sortBy) {
+            case "publicationYear":
+                return "publicationYear";
+            case "title":
+                return "title";
+            case "author":
+                return "author";
+            default:
+                return "title";
+        }
+    }
+
+    private BookDto convertToDto(Book book) {
+        boolean isAvailable = book.getStatus().equals('A');
+
+        return BookDto.builder()
+                .id(book.getId())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .publisher(book.getPublisher())
+                .publicationYear(book.getPublicationYear())
+                .price(book.getPrice())
+                .status(book.getStatus())
+                .isLoaned(!isAvailable)  // A가 아니면 대출중
+                .isAvailable(isAvailable)  // A면 대출가능
+                .loanStatus(isAvailable ? "대출가능" : "대출불가")
                 .build();
     }
 }

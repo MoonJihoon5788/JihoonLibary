@@ -3,9 +3,14 @@ package com.example.jihoonlibary_back.controller;
 
 import com.example.jihoonlibary_back.dto.BookCreateDto;
 import com.example.jihoonlibary_back.dto.BookDto;
+import com.example.jihoonlibary_back.dto.BookSearchDto;
 import com.example.jihoonlibary_back.dto.BookUpdateDto;
 import com.example.jihoonlibary_back.service.BookService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,4 +56,53 @@ public class BookController {
             return ResponseEntity.badRequest().build();
         }
     }
+    // 도서 상세 조회
+    @GetMapping("/admin/books/{bookId}")
+    public ResponseEntity<BookDto> getBook(@PathVariable Long bookId) {
+        try {
+            BookDto bookDto = bookService.getBook(bookId);
+            return ResponseEntity.ok(bookDto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/user/books/search")
+    public ResponseEntity<Page<BookDto>> searchBooks(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "all") String searchType,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        BookSearchDto searchDto = new BookSearchDto();
+        searchDto.setKeyword(keyword);
+        searchDto.setSearchType(searchType);
+        searchDto.setSortBy(sortBy);
+        searchDto.setSortDirection(sortDirection);
+        searchDto.setPage(page);
+        searchDto.setSize(size);
+
+        Page<BookDto> books = bookService.searchBooks(searchDto);
+        return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("/user/books")
+    public ResponseEntity<Page<BookDto>> getUserBooks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+
+        Sort sort = Sort.by(
+                sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy
+        );
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<BookDto> books = bookService.getBooks(pageable);
+        return ResponseEntity.ok(books);
+    }
+
 }
