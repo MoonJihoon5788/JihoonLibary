@@ -1,20 +1,24 @@
 package com.example.jihoonlibary_back.service;
 
-import com.example.jihoonlibary_back.dto.MemberDto;
-import com.example.jihoonlibary_back.dto.MemberJoinDto;
-import com.example.jihoonlibary_back.dto.MemberResponseDto;
-import com.example.jihoonlibary_back.dto.MemberUpdateDto;
+import com.example.jihoonlibary_back.dto.*;
 import com.example.jihoonlibary_back.entity.Loan;
 import com.example.jihoonlibary_back.entity.Member;
+import com.example.jihoonlibary_back.repository.LoanRepository;
 import com.example.jihoonlibary_back.repository.MemberRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,7 +28,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final LoanRepository loanRepository;
 
     @Transactional
     public MemberDto createMember(MemberJoinDto memberJoinDto) {
@@ -105,7 +109,7 @@ public class MemberService {
         // 대출 중인 도서가 있는지 확인
         boolean isActiveLoans = false;
         for (Loan loan : member.getLoans()) {
-            if (loan.getStatus() == 'L') {
+            if (loan.getStatus().equals('L') || loan.getStatus().equals('O')) {
                 isActiveLoans = true;
                 break;
             }
@@ -117,21 +121,56 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
-
-    private MemberResponseDto convertToDto(Member member) {
-        // 현재 대출 중인 도서 수와 연체 여부 계산
-        int currentLoans = 0;
-        boolean hasOverdueBooks = false;
-
-        for (Loan loan : member.getLoans()) {
-            if (loan.currentLoan()) {
-                currentLoans++;
+    // 모든 사용자 조회 (페이징)
+    @Transactional(readOnly = true)
+    public Page<MemberResponseDto> getAllMembers(Pageable pageable) {
+        // 정렬 필드명 매핑
+        if (pageable.getSort().isSorted()) {
+            Sort mappedSort = Sort.unsorted();
+            for (Sort.Order order : pageable.getSort()) {
+                String mappedField = mapSortField(order.getProperty());
+                mappedSort = mappedSort.and(Sort.by(order.getDirection(), mappedField));
             }
-            
-            if (loan.isOverdue()) {
-                hasOverdueBooks = true;
-            }
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
         }
+
+        Page<Member> members = memberRepository.findAll(pageable);
+        return members.map(this::convertToResponseDto);
+    }
+
+    // 사용자 상세 조회 (대출 현황 포함)
+    @Transactional(readOnly = true)
+    public MemberDetailDto getMemberDetail(Long memberId) {
+        Optional<Member> optionalMember = memberRepository.findById(memberId);
+        if (optionalMember.isEmpty()) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        Member member = optionalMember.get();
+
+        return convertToDetailDto(member);
+    }
+    
+    //유틸
+
+    private String mapSortField(String sortBy) {
+        switch (sortBy) {
+            case "name":
+                return "name";
+            case "loginId":
+                return "loginId";
+            case "role":
+                return "role";
+            case "phone":
+                return "phone";
+            default:
+                return "name";
+        }
+    }
+
+
+    private MemberResponseDto convertToResponseDto(Member member) {
+        long currentLoans = loanRepository.countByMemberIdAndStatusIn(member.getId(), List.of('L', 'O'));
+        boolean hasOverdueBooks = loanRepository.existsByMemberIdAndStatus(member.getId(), 'O');
 
         return MemberResponseDto.builder()
                 .id(member.getId())
@@ -139,8 +178,83 @@ public class MemberService {
                 .phone(member.getPhone())
                 .memo(member.getMemo())
                 .role(member.getRole())
-                .currentLoans(currentLoans)
+                .currentLoans((int) currentLoans)
                 .hasOverdueBooks(hasOverdueBooks)
+                .build();
+    }
+
+    private MemberDetailDto convertToDetailDto(Member member) {
+        long currentLoans = loanRepository.countByMemberIdAndStatusIn(member.getId(), List.of('L', 'O'));
+        boolean hasOverdueBooks = loanRepository.existsByMemberIdAndStatus(member.getId(), 'O');
+        long overdueCount = loanRepository.countByMemberIdAndStatus(member.getId(), 'O');
+
+        // 현재 대출 중인 도서 목록
+        List<LoanHistoryDto> currentLoanList = member.getLoans().stream()
+                .filter(Loan::currentLoan)
+                .map(this::convertToLoanHistoryDto)
+                .collect(Collectors.toList());
+
+        // 전체 대출 이력
+        List<LoanHistoryDto> loanHistory = member.getLoans().stream()
+                .sorted((l1, l2) -> l2.getLoanDate().compareTo(l1.getLoanDate()))
+                .map(this::convertToLoanHistoryDto)
+                .collect(Collectors.toList());
+
+        // 회원 상태 결정
+        String memberStatus;
+        if (overdueCount > 0) {
+            memberStatus = "연체중";
+        } else if (currentLoans >= 2) {
+            memberStatus = "대출제한";
+        } else {
+            memberStatus = "정상";
+        }
+
+        return MemberDetailDto.builder()
+                .id(member.getId())
+                .loginId(member.getLoginId())
+                .name(member.getName())
+                .phone(member.getPhone())
+                .memo(member.getMemo())
+                .role(member.getRole())
+                .currentLoans((int) currentLoans)
+                .overdueCount((int)overdueCount)
+                .hasOverdueBooks(hasOverdueBooks)
+                .memberStatus(memberStatus)
+                .currentLoanList(currentLoanList)
+                .loanHistory(loanHistory)
+                .totalLoanCount(member.getLoans().size())
+                .build();
+    }
+
+    private MemberResponseDto convertToDto(Member member) {
+        // 현재 대출 중인 도서 수와 연체 여부 계산
+        long currentLoans = loanRepository.countByMemberIdAndStatusIn(member.getId(), List.of('L', 'O'));
+        boolean hasOverdueBooks = loanRepository.existsByMemberIdAndStatus(member.getId(), 'O');
+
+        return MemberResponseDto.builder()
+                .id(member.getId())
+                .loginId(member.getLoginId())
+                .phone(member.getPhone())
+                .memo(member.getMemo())
+                .role(member.getRole())
+                .currentLoans((int)currentLoans)
+                .hasOverdueBooks(hasOverdueBooks)
+                .build();
+    }
+
+    private LoanHistoryDto convertToLoanHistoryDto(Loan loan) {
+        return LoanHistoryDto.builder()
+                .id(loan.getId())
+                .bookTitle(loan.getBook().getTitle())
+                .bookAuthor(loan.getBook().getAuthor())
+                .memberLoginId(loan.getMember().getLoginId())
+                .loanDate(loan.getLoanDate())
+                .returnDate(loan.getReturnDate())
+                .realReturnDate(loan.getRealReturnDate())
+                .status(loan.getStatus())
+                .statusDescription(loan.getStatusDescription())
+                .isOverdue(loan.isOverdue())
                 .build();
     }
 }

@@ -17,4 +17,13 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     boolean existsByMemberAndStatus(Member member, Character status);
     Optional<Loan> findByBookAndMemberAndStatusIn(Book book, Member member, List<Character> statuses);
     List<Loan> findByStatusAndReturnDateBefore(Character status, LocalDate date);
+
+    // 현재 대출 중인 도서 수 조회 (L: 대출중, O: 연체)
+    long countByMemberIdAndStatusIn(Long memberId, List<Character> statuses);
+
+    // 연체 도서 여부 확인 (O: 연체)
+    boolean existsByMemberIdAndStatus(Long memberId, Character status);
+
+    // 현재 연체 중인 도서 수 조회
+    long countByMemberIdAndStatus(Long memberId, Character status);
 }

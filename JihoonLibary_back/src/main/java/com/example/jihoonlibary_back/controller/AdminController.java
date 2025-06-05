@@ -1,11 +1,12 @@
 package com.example.jihoonlibary_back.controller;
 
-import com.example.jihoonlibary_back.dto.MemberDto;
-import com.example.jihoonlibary_back.dto.MemberJoinDto;
-import com.example.jihoonlibary_back.dto.MemberResponseDto;
-import com.example.jihoonlibary_back.dto.MemberUpdateDto;
+import com.example.jihoonlibary_back.dto.*;
 import com.example.jihoonlibary_back.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,6 +50,36 @@ public class AdminController {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+
+    // 모든 사용자 조회 (페이징)
+    @GetMapping("/members")
+    public ResponseEntity<Page<MemberResponseDto>> getAllMembers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+
+        Sort sort = Sort.by(
+                sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy
+        );
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<MemberResponseDto> members = memberService.getAllMembers(pageable);
+        return ResponseEntity.ok(members);
+    }
+
+    // 사용자 상세 조회 (대출 현황 포함)
+    @GetMapping("/members/{memberId}")
+    public ResponseEntity<MemberDetailDto> getMemberDetail(@PathVariable Long memberId) {
+        try {
+            MemberDetailDto memberDetail = memberService.getMemberDetail(memberId);
+            return ResponseEntity.ok(memberDetail);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }
