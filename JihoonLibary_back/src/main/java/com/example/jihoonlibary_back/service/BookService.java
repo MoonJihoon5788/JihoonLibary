@@ -1,10 +1,8 @@
 package com.example.jihoonlibary_back.service;
 
-import com.example.jihoonlibary_back.dto.BookCreateDto;
-import com.example.jihoonlibary_back.dto.BookDto;
-import com.example.jihoonlibary_back.dto.BookSearchDto;
-import com.example.jihoonlibary_back.dto.BookUpdateDto;
+import com.example.jihoonlibary_back.dto.*;
 import com.example.jihoonlibary_back.entity.Book;
+import com.example.jihoonlibary_back.entity.Loan;
 import com.example.jihoonlibary_back.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,7 +12,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,14 +74,33 @@ public class BookService {
 
     // 도서 상세 검색
     @Transactional(readOnly = true)
-    public BookDto getBook(Long bookId) {
+    public BookDetailDto getBook(Long bookId) {
         Optional<Book> optionalBook = bookRepository.findById(bookId);
         if (optionalBook.isEmpty()){
             throw new IllegalArgumentException("책을 찾을 수 없습니다.");
         }
         Book book = optionalBook.get();
 
-        return convertToDto(book);
+        List<LoanHistoryDto> loanHistory = book.getLoans().stream()
+                .sorted((l1, l2) -> l2.getLoanDate().compareTo(l1.getLoanDate()))
+                .map(this::convertToLoanHistoryDto)
+                .collect(Collectors.toList());
+
+        boolean isAvailable = book.getStatus().equals('A');
+
+        return BookDetailDto.builder()
+                .id(book.getId())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .publisher(book.getPublisher())
+                .publicationYear(book.getPublicationYear())
+                .price(book.getPrice())
+                .status(book.getStatus())
+                .isLoaned(!isAvailable)  // A가 아니면 대출중
+                .isAvailable(isAvailable)  // A면 대출가능
+                .loanStatus(isAvailable ? "대출가능" : "대출불가")
+                .loanHistory(loanHistory)
+                .build();
     }
 
     // 도서 목록 조회 (페이징)
@@ -149,6 +168,21 @@ public class BookService {
             default:
                 return "title";
         }
+    }
+
+    private LoanHistoryDto convertToLoanHistoryDto(Loan loan) {
+        return LoanHistoryDto.builder()
+                .id(loan.getId())
+                .bookTitle(loan.getBook().getTitle())
+                .bookAuthor(loan.getBook().getAuthor())
+                .memberLoginId(loan.getMember().getLoginId())
+                .loanDate(loan.getLoanDate())
+                .returnDate(loan.getReturnDate())
+                .realReturnDate(loan.getRealReturnDate())
+                .status(loan.getStatus())
+                .statusDescription(loan.getStatusDescription())
+                .isOverdue(loan.isOverdue())
+                .build();
     }
 
     private BookDto convertToDto(Book book) {

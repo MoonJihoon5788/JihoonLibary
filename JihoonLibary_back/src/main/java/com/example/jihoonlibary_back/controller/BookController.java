@@ -1,10 +1,7 @@
 package com.example.jihoonlibary_back.controller;
 
 
-import com.example.jihoonlibary_back.dto.BookCreateDto;
-import com.example.jihoonlibary_back.dto.BookDto;
-import com.example.jihoonlibary_back.dto.BookSearchDto;
-import com.example.jihoonlibary_back.dto.BookUpdateDto;
+import com.example.jihoonlibary_back.dto.*;
 import com.example.jihoonlibary_back.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -58,10 +55,10 @@ public class BookController {
     }
     // 도서 상세 조회
     @GetMapping("/admin/books/{bookId}")
-    public ResponseEntity<BookDto> getBook(@PathVariable Long bookId) {
+    public ResponseEntity<BookDetailDto> getBook(@PathVariable Long bookId) {
         try {
-            BookDto bookDto = bookService.getBook(bookId);
-            return ResponseEntity.ok(bookDto);
+            BookDetailDto bookDetailDto = bookService.getBook(bookId);
+            return ResponseEntity.ok(bookDetailDto);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

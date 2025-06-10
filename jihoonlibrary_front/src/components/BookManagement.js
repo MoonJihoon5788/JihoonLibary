@@ -28,23 +28,27 @@ const BookManagement = ({ setCurrentView, token }) => {
                 sortBy: sortBy,
                 sortDirection: sortDirection,
                 page: currentPage.toString(),
-                size: '10'
+                size: '10' 
             });
 
-            let response;
-
-            if (searchKeyword.trim() === '') {
-                response = await fetch(`http://localhost:8081/api/user/books?${params}`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
-            } else {
-                response = await fetch(`http://localhost:8081/api/user/books/search?${params}`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
-            }
+            // 항상 검색 API 사용 (빈 검색어면 모든 도서 검색)
+            const response = await fetch(`http://localhost:8081/api/user/books/search?${params}`, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('=== 전체 응답 데이터 ===');
+                console.log(data);
+                console.log('=== 도서 목록 (data.content) ===');
+                console.log(data.content);
+                console.log('=== 페이지 정보 ===');
+                console.log('totalPages:', data.totalPages);
+                console.log('totalElements:', data.totalElements);
+                console.log('현재 페이지:', data.number);
+                console.log('페이지 크기:', data.size);
+                console.log('마지막 페이지 여부:', data.last);
+
                 setBooks(data.content || []);
                 setTotalPages(data.totalPages || 0);
             } else {
@@ -503,22 +507,91 @@ const BookManagement = ({ setCurrentView, token }) => {
                         backgroundColor: 'white',
                         padding: '20px',
                         borderRadius: '8px',
-                        maxWidth: '500px',
-                        width: '90%'
+                        maxWidth: '800px',
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflow: 'auto'
                     }}>
                         <h4>도서 상세 정보</h4>
-                        <p><strong>도서 ID:</strong> {selectedBook.id}</p>
-                        <p><strong>제목:</strong> {selectedBook.title}</p>
-                        <p><strong>저자:</strong> {selectedBook.author}</p>
-                        <p><strong>출판사:</strong> {selectedBook.publisher}</p>
-                        <p><strong>출간년도:</strong> {selectedBook.publicationYear}</p>
-                        <p><strong>가격:</strong> {selectedBook.price?.toLocaleString()}원</p>
-                        <p><strong>대출 상태:</strong>
-                            <span style={{ color: selectedBook.isAvailable ? 'green' : 'red', marginLeft: '5px' }}>
-                {selectedBook.loanStatus}
-              </span>
-                        </p>
 
+                        {/* 기본 정보 */}
+                        <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                            <h5 style={{ marginTop: 0, color: '#333' }}>기본 정보</h5>
+                            <p><strong>도서 ID:</strong> {selectedBook.id}</p>
+                            <p><strong>제목:</strong> {selectedBook.title}</p>
+                            <p><strong>저자:</strong> {selectedBook.author}</p>
+                            <p><strong>출판사:</strong> {selectedBook.publisher}</p>
+                            <p><strong>출간년도:</strong> {selectedBook.publicationYear}</p>
+                            <p><strong>가격:</strong> {selectedBook.price?.toLocaleString()}원</p>
+                            <p><strong>상태:</strong> {selectedBook.status}</p>
+                            <p><strong>대출 상태:</strong>
+                                <span style={{ color: selectedBook.isAvailable ? 'green' : 'red', marginLeft: '5px' }}>
+                  {selectedBook.loanStatus}
+                </span>
+                            </p>
+                        </div>
+
+                        {/* 대출 내역 */}
+                        {selectedBook.loanHistory && selectedBook.loanHistory.length > 0 && (
+                            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                                <h5 style={{ marginTop: 0, color: '#333' }}>대출 내역</h5>
+                                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                                        <thead>
+                                        <tr style={{ backgroundColor: '#f5f5f5', position: 'sticky', top: 0 }}>
+                                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>회원ID</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>대출일</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>반납예정</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>실제반납</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>상태</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {selectedBook.loanHistory.map(loan => (
+                                            <tr key={loan.id} style={{
+                                                backgroundColor: loan.isOverdue ? '#ffe6e6' : 'white'
+                                            }}>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>{loan.memberLoginId}</td>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>
+                                                    {loan.loanDate ? new Date(loan.loanDate).toLocaleDateString('ko-KR') : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>
+                                                    {loan.returnDate ? new Date(loan.returnDate).toLocaleDateString('ko-KR') : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>
+                                                    {loan.realReturnDate ? new Date(loan.realReturnDate).toLocaleDateString('ko-KR') : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '6px' }}>
+                            <span style={{
+                                color: loan.status === 'R' ? 'green' :
+                                    loan.status === 'O' ? 'red' : 'blue'
+                            }}>
+                              {loan.statusDescription}
+                            </span>
+                                                    {loan.isOverdue && loan.status !== 'R' && (
+                                                        <span style={{ color: 'red' }}> (연체)</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+                                    총 {selectedBook.loanHistory.length}건의 대출 내역
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 대출 내역이 없는 경우 */}
+                        {(!selectedBook.loanHistory || selectedBook.loanHistory.length === 0) && (
+                            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center', color: '#666' }}>
+                                <h5 style={{ marginTop: 0, color: '#333' }}>대출 내역</h5>
+                                <p>대출 내역이 없습니다.</p>
+                            </div>
+                        )}
+
+                        {/* 버튼들 */}
                         <div style={{ marginTop: '20px', textAlign: 'center' }}>
                             <button
                                 onClick={() => setSelectedBook(null)}
