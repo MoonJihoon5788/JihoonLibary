@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { apiCall } from '../utils/tokenRefresh';
 
 const UserBooks = ({ setCurrentView, user, token, logout }) => {
     const [books, setBooks] = useState([]);
@@ -9,11 +10,7 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
-    useEffect(() => {
-        searchBooks();
-    }, [searchKeyword, searchType, sortBy, sortDirection, currentPage]);
-
-    const searchBooks = async () => {
+    const searchBooks = useCallback(async () => {
         try {
             const params = new URLSearchParams({
                 keyword: searchKeyword,
@@ -24,19 +21,15 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
                 size: '10'
             });
 
-            // 검색 API와 일반 목록 API 모두 시도
+            // apiCall 사용으로 변경
             let response;
 
             if (searchKeyword.trim() === '') {
                 // 검색어가 없으면 일반 목록 API 사용
-                response = await fetch(`http://localhost:8081/api/user/books?${params}`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
+                response = await apiCall(`http://localhost:8081/api/user/books?${params}`);
             } else {
                 // 검색어가 있으면 검색 API 사용
-                response = await fetch(`http://localhost:8081/api/user/books/search?${params}`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
+                response = await apiCall(`http://localhost:8081/api/user/books/search?${params}`);
             }
 
             if (response.ok) {
@@ -55,7 +48,11 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
             setBooks([]);
             setTotalPages(0);
         }
-    };
+    }, [searchKeyword, searchType, sortBy, sortDirection, currentPage]);
+
+    useEffect(() => {
+        searchBooks();
+    }, [searchBooks]);
 
     // 검색 초기화
     const handleSearchReset = () => {

@@ -28,7 +28,7 @@ const BookManagement = ({ setCurrentView, token }) => {
                 sortBy: sortBy,
                 sortDirection: sortDirection,
                 page: currentPage.toString(),
-                size: '5' // 페이지 크기를 5로 줄여서 페이지네이션 확인
+                size: '10'
             });
 
             // 항상 검색 API 사용 (빈 검색어면 모든 도서 검색)
