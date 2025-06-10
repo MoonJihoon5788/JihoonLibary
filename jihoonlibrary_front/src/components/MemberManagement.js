@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiCall, apiPost, apiPut, apiDelete } from '../utils/tokenRefresh';
 
 const MemberManagement = ({ setCurrentView, token }) => {
     const [members, setMembers] = useState([]);
@@ -18,9 +19,7 @@ const MemberManagement = ({ setCurrentView, token }) => {
 
     const fetchMembers = async () => {
         try {
-            const response = await fetch('http://localhost:8081/api/admin/members', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await apiCall('http://localhost:8081/api/admin/members');
             if (response.ok) {
                 const data = await response.json();
                 setMembers(data.content);
@@ -33,14 +32,7 @@ const MemberManagement = ({ setCurrentView, token }) => {
     const handleAddMember = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8081/api/admin/members', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newMember)
-            });
+            const response = await apiPost('http://localhost:8081/api/admin/members', newMember);
 
             if (response.ok) {
                 fetchMembers();
@@ -74,14 +66,7 @@ const MemberManagement = ({ setCurrentView, token }) => {
                 updateData.password = editingMember.password;
             }
 
-            const response = await fetch(`http://localhost:8081/api/admin/members/${editingMember.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updateData)
-            });
+            const response = await apiPut(`http://localhost:8081/api/admin/members/${editingMember.id}`, updateData);
 
             if (response.ok) {
                 setMessage('회원이 성공적으로 수정되었습니다.');
@@ -118,9 +103,7 @@ const MemberManagement = ({ setCurrentView, token }) => {
 
     const fetchMemberDetail = async (memberId) => {
         try {
-            const response = await fetch(`http://localhost:8081/api/admin/members/${memberId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await apiCall(`http://localhost:8081/api/admin/members/${memberId}`);
             if (response.ok) {
                 const data = await response.json();
                 console.log('회원 상세 데이터:', data);
@@ -139,10 +122,7 @@ const MemberManagement = ({ setCurrentView, token }) => {
 
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8081/api/admin/members/${memberId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await apiDelete(`http://localhost:8081/api/admin/members/${memberId}`);
 
             if (response.ok) {
                 setMessage('회원이 성공적으로 삭제되었습니다.');
