@@ -27,6 +27,17 @@ const App = () => {
     }
   };
 
+  // currentView 변경 시 localStorage에 저장하는 헬퍼 함수
+  const handleSetCurrentView = (view) => {
+    setCurrentView(view);
+    // login 페이지가 아닐 때만 저장 (로그아웃 시 login으로 가는 것은 저장하지 않음)
+    if (view !== 'login') {
+      localStorage.setItem('currentView', view);
+    } else {
+      localStorage.removeItem('currentView');
+    }
+  };
+
   // 로그아웃 함수
   const logout = async () => {
     try {
@@ -44,6 +55,9 @@ const App = () => {
 
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('currentView'); // currentView도 제거
+    localStorage.removeItem('userRole'); // 역할 정보도 제거
+    localStorage.removeItem('loginId'); // 로그인 ID도 제거
     setToken(null);
     setUser(null);
     setCurrentView('login');
@@ -67,20 +81,36 @@ const App = () => {
           if (response.ok) {
             console.log('토큰 유효함, 자동 로그인 처리');
 
-            // JWT에서 사용자 정보 추출 (선택사항)
-            const payload = parseJWT(storedToken);
-            const userRole = payload?.role || 'USER'; // JWT에 역할 정보가 있다면
-            const loginId = payload?.sub || 'unknown'; // JWT의 subject에서 사용자 ID
+            // localStorage에서 사용자 정보 가져오기
+            const userRole = localStorage.getItem('userRole') || 'USER';
+            const loginId = localStorage.getItem('loginId') || 'unknown';
+
+            console.log('localStorage에서 가져온 userRole:', userRole, 'loginId:', loginId);
 
             setToken(storedToken);
             setUser({ loginId, role: userRole });
 
-            // 사용자 역할에 따라 적절한 화면으로 이동
-            if (userRole === 'ADMIN') {
-              setCurrentView('admin');
+            // 저장된 currentView가 있고, 권한이 맞으면 복원
+            const savedView = localStorage.getItem('currentView');
+
+            if (savedView) {
+              // 관리자가 아닌데 관리자 페이지에 접근하려 하면 기본 페이지로
+              const adminPages = ['admin', 'memberManagement', 'bookManagement', 'loanManagement'];
+
+              if (adminPages.includes(savedView) && userRole !== 'ADMIN') {
+                handleSetCurrentView('userBooks');
+              } else if (userRole === 'ADMIN' && savedView === 'userBooks') {
+                // 관리자인데 userBooks 페이지면 그대로 유지
+                handleSetCurrentView(savedView);
+              } else {
+                // 권한이 맞으면 저장된 페이지로 복원
+                handleSetCurrentView(savedView);
+              }
             } else {
-              setCurrentView('userBooks');
+              // 저장된 페이지가 없으면 기본 페이지로
+              handleSetCurrentView(userRole === 'ADMIN' ? 'admin' : 'userBooks');
             }
+
           } else if (response.status === 401) {
             console.log('토큰 만료, 갱신 시도...');
 
@@ -101,27 +131,45 @@ const App = () => {
               setToken(refreshData.accessToken);
               setUser({ loginId: refreshData.loginId, role: refreshData.role });
 
-              if (refreshData.role === 'ADMIN') {
-                setCurrentView('admin');
+              // 토큰 갱신 후에도 저장된 페이지 복원
+              const savedView = localStorage.getItem('currentView');
+
+              if (savedView) {
+                const adminPages = ['admin', 'memberManagement', 'bookManagement', 'loanManagement'];
+
+                if (adminPages.includes(savedView) && refreshData.role !== 'ADMIN') {
+                  handleSetCurrentView('userBooks');
+                } else {
+                  handleSetCurrentView(savedView);
+                }
               } else {
-                setCurrentView('userBooks');
+                handleSetCurrentView(refreshData.role === 'ADMIN' ? 'admin' : 'userBooks');
               }
             } else {
               console.log('토큰 갱신 실패, 로그인 화면으로 이동');
               localStorage.removeItem('token');
               localStorage.removeItem('refreshToken');
+              localStorage.removeItem('currentView');
+              localStorage.removeItem('userRole');
+              localStorage.removeItem('loginId');
               setCurrentView('login');
             }
           } else {
             console.log('토큰 유효성 검사 실패');
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
+            localStorage.removeItem('currentView');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('loginId');
             setCurrentView('login');
           }
         } catch (error) {
           console.error('자동 로그인 처리 중 오류:', error);
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('currentView');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('loginId');
           setCurrentView('login');
         }
       } else {
@@ -159,7 +207,7 @@ const App = () => {
       case 'login':
         return (
             <Login
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 setUser={setUser}
                 setToken={setToken}
             />
@@ -167,35 +215,35 @@ const App = () => {
       case 'admin':
         return (
             <AdminDashboard
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 logout={logout}
             />
         );
       case 'memberManagement':
         return (
             <MemberManagement
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 token={token}
             />
         );
       case 'bookManagement':
         return (
             <BookManagement
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 token={token}
             />
         );
       case 'loanManagement':
         return (
             <LoanManagement
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 token={token}
             />
         );
       case 'userBooks':
         return (
             <UserBooks
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 user={user}
                 token={token}
                 logout={logout}
@@ -204,7 +252,7 @@ const App = () => {
       default:
         return (
             <Login
-                setCurrentView={setCurrentView}
+                setCurrentView={handleSetCurrentView}
                 setUser={setUser}
                 setToken={setToken}
             />

@@ -18,12 +18,14 @@ const Login = ({ setCurrentView, setUser, setToken }) => {
                 setToken(data.accessToken);
                 localStorage.setItem('token', data.accessToken);
                 localStorage.setItem('refreshToken', data.refreshToken);
+                localStorage.setItem('userRole', data.role); // 역할 정보 저장
+                localStorage.setItem('loginId', data.loginId); // 로그인 ID도 저장
                 setUser({ loginId: data.loginId, role: data.role });
 
                 if (data.role === 'ADMIN') {
                     setCurrentView('admin');
                 } else {
-                    setCurrentView('userBooks'); // 'user'가 아니라 'userBooks'로 수정
+                    setCurrentView('userBooks');
                 }
             } else {
                 setError('로그인 실패');

@@ -24,9 +24,9 @@ INSERT INTO book (title, author, publisher, publication_year, price, status) VAL
 -- user01이 2권 대출 중 (1권은 연체, 1권은 정상)
 INSERT INTO loan (loan_date, return_date, real_return_date, status, b_id, m_id) VALUES
 -- 연체된 대출 (반납 예정일이 지난 상태)
-('2024-05-15', '2024-05-30', NULL, 'L', 1, 2),
--- 정상 대출 (아직 반납 기한 내)
-('2024-06-01', '2024-06-16', NULL, 'L', 2, 2);
+('2025-05-15', '2025-05-30', NULL, 'L', 1, 2),
+-- 정상 대출 
+('2025-06-04', '2025-06-16', NULL, 'L', 2, 2);
 
 -- 과거 대출 이력 (반납 완료)
 INSERT INTO loan (loan_date, return_date, real_return_date, status, b_id, m_id) VALUES
