@@ -70,14 +70,6 @@ const Login = ({ setCurrentView, setUser, setToken }) => {
                     </div>
                     <button type="submit" className="login-btn">로그인</button>
                 </form>
-
-                <div className="login-footer">
-                    <p className="login-footer-title">테스트 계정:</p>
-                    <div className="test-accounts">
-                        <div className="test-account">관리자: jihun5788 / jihun1</div>
-                        <div className="test-account">사용자: user01 / user123</div>
-                    </div>
-                </div>
             </div>
         </div>
     );
