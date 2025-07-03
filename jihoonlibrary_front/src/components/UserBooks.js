@@ -9,8 +9,10 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
     const [sortDirection, setSortDirection] = useState('asc');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const searchBooks = useCallback(async () => {
+        setLoading(true);
         try {
             const params = new URLSearchParams({
                 keyword: searchKeyword,
@@ -21,14 +23,10 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
                 size: '10'
             });
 
-            // apiCall 사용으로 변경
             let response;
-
             if (searchKeyword.trim() === '') {
-                // 검색어가 없으면 일반 목록 API 사용
                 response = await apiCall(`http://localhost:8081/api/user/books?${params}`);
             } else {
-                // 검색어가 있으면 검색 API 사용
                 response = await apiCall(`http://localhost:8081/api/user/books/search?${params}`);
             }
 
@@ -38,15 +36,15 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
                 setTotalPages(data.totalPages || 0);
             } else {
                 console.error('API 응답 오류:', response.status);
-                // 오류가 발생하면 빈 배열로 설정
                 setBooks([]);
                 setTotalPages(0);
             }
         } catch (err) {
             console.error('도서 검색 실패', err);
-            // 네트워크 오류 시에도 빈 배열로 설정
             setBooks([]);
             setTotalPages(0);
+        } finally {
+            setLoading(false);
         }
     }, [searchKeyword, searchType, sortBy, sortDirection, currentPage]);
 
@@ -54,7 +52,6 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
         searchBooks();
     }, [searchBooks]);
 
-    // 검색 초기화
     const handleSearchReset = () => {
         setSearchKeyword('');
         setSearchType('all');
@@ -64,129 +61,150 @@ const UserBooks = ({ setCurrentView, user, token, logout }) => {
     };
 
     return (
-        <div style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3>도서 검색</h3>
-                <div>
-                    {user && user.role === 'ADMIN' && (
-                        <button onClick={() => setCurrentView('admin')} style={{ marginRight: '10px', padding: '8px 16px' }}>
-                            관리자 화면
+        <div className="main-content">
+            <div className="content-wrapper fade-in">
+                <div className="section-header">
+                    <h3 className="section-title">📚 도서 검색</h3>
+                    <div className="section-actions">
+                        {user && user.role === 'ADMIN' && (
+                            <button
+                                onClick={() => setCurrentView('admin')}
+                                className="btn btn-secondary"
+                            >
+                                관리자 화면
+                            </button>
+                        )}
+                        <button
+                            onClick={user ? logout : () => setCurrentView('login')}
+                            className="btn btn-outline"
+                        >
+                            {user ? '로그아웃' : '로그인'}
                         </button>
-                    )}
-                    {user ? (
-                        <button onClick={logout} style={{ padding: '8px 16px' }}>로그아웃</button>
-                    ) : (
-                        <button onClick={() => setCurrentView('login')} style={{ padding: '8px 16px' }}>로그인</button>
-                    )}
+                    </div>
                 </div>
-            </div>
 
-            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '10px' }}>
-                    <input
-                        type="text"
-                        placeholder="검색어를 입력하세요"
-                        value={searchKeyword}
-                        onChange={(e) => setSearchKeyword(e.target.value)}
-                        style={{ padding: '8px' }}
-                    />
-                    <select
-                        value={searchType}
-                        onChange={(e) => setSearchType(e.target.value)}
-                        style={{ padding: '8px' }}
-                    >
-                        <option value="all">전체</option>
-                        <option value="title">제목</option>
-                        <option value="author">저자</option>
-                        <option value="publisher">출판사</option>
-                    </select>
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        style={{ padding: '8px' }}
-                    >
-                        <option value="title">제목순</option>
-                        <option value="author">저자순</option>
-                        <option value="publicationYear">출간년도순</option>
-                    </select>
-                    <select
-                        value={sortDirection}
-                        onChange={(e) => setSortDirection(e.target.value)}
-                        style={{ padding: '8px' }}
-                    >
-                        <option value="asc">오름차순</option>
-                        <option value="desc">내림차순</option>
-                    </select>
+                <div className="search-section">
+                    <h4 className="search-title">검색 및 필터</h4>
+                    <div className="filter-grid">
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="검색어를 입력하세요"
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                        />
+                        <select
+                            className="form-input"
+                            value={searchType}
+                            onChange={(e) => setSearchType(e.target.value)}
+                        >
+                            <option value="all">전체</option>
+                            <option value="title">제목</option>
+                            <option value="author">저자</option>
+                            <option value="publisher">출판사</option>
+                        </select>
+                        <select
+                            className="form-input"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <option value="title">제목순</option>
+                            <option value="author">저자순</option>
+                            <option value="publicationYear">출간년도순</option>
+                        </select>
+                        <select
+                            className="form-input"
+                            value={sortDirection}
+                            onChange={(e) => setSortDirection(e.target.value)}
+                        >
+                            <option value="asc">오름차순</option>
+                            <option value="desc">내림차순</option>
+                        </select>
+                    </div>
+                    <div className="filter-actions">
+                        <button onClick={handleSearchReset} className="btn btn-ghost">
+                            검색 초기화
+                        </button>
+                    </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                    <button onClick={handleSearchReset} style={{ padding: '8px 16px' }}>
-                        검색 초기화
-                    </button>
-                </div>
-            </div>
 
-            <div>
-                {books.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>ID</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>제목</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>저자</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>출판사</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>출간년도</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>가격</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>대출상태</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {books.map(book => (
-                            <tr key={book.id}>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.id}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.title}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.author}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.publisher}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.publicationYear}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{book.price?.toLocaleString()}원</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    <span style={{ color: book.isAvailable ? 'green' : 'red' }}>
-                      {book.loanStatus}
-                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                        <p>도서가 없습니다.</p>
-                        <p>백엔드 서버가 실행 중인지 확인해주세요. (http://localhost:8081)</p>
+                {loading && (
+                    <div className="loading-container">
+                        <div className="loading-spinner"></div>
+                        <p className="loading-text">검색 중...</p>
+                    </div>
+                )}
+
+                {!loading && (
+                    <div className="table-container">
+                        {books.length > 0 ? (
+                            <div className="table-responsive">
+                                <table className="table">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>제목</th>
+                                        <th>저자</th>
+                                        <th>출판사</th>
+                                        <th>출간년도</th>
+                                        <th>가격</th>
+                                        <th>대출상태</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {books.map(book => (
+                                        <tr key={book.id}>
+                                            <td>{book.id}</td>
+                                            <td>{book.title}</td>
+                                            <td>{book.author}</td>
+                                            <td>{book.publisher}</td>
+                                            <td>{book.publicationYear}</td>
+                                            <td>{book.price?.toLocaleString()}원</td>
+                                            <td>
+                                                    <span className={`status-badge ${book.isAvailable ? 'status-available' : 'status-unavailable'}`}>
+                                                        {book.loanStatus}
+                                                    </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">📚</div>
+                                <h4 className="empty-state-title">도서가 없습니다</h4>
+                                <p className="empty-state-description">
+                                    검색 조건을 변경하거나 백엔드 서버가 실행 중인지 확인해주세요.<br />
+                                    (http://localhost:8081)
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {totalPages > 0 && (
+                    <div className="pagination">
+                        <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                            disabled={currentPage === 0}
+                        >
+                            이전
+                        </button>
+                        <span className="pagination-info">
+                            {currentPage + 1} / {totalPages}
+                        </span>
+                        <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                            disabled={currentPage >= totalPages - 1}
+                        >
+                            다음
+                        </button>
                     </div>
                 )}
             </div>
-
-            {/* 페이지네이션 */}
-            {totalPages > 0 && (
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <button
-                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                        disabled={currentPage === 0}
-                        style={{ marginRight: '10px', padding: '8px 12px' }}
-                    >
-                        이전
-                    </button>
-                    <span style={{ margin: '0 15px' }}>
-            {currentPage + 1} / {totalPages}
-          </span>
-                    <button
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                        disabled={currentPage >= totalPages - 1}
-                        style={{ marginLeft: '10px', padding: '8px 12px' }}
-                    >
-                        다음
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

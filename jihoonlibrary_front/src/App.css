@@ -1,38 +1,422 @@
+/* src/App.css */
+@import './styles/variables.css';
+@import './styles/components.css';
+@import './styles/layout.css';
+
+/* 애플리케이션 루트 */
 .App {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, #fefefe 100%);
+  font-family: var(--font-primary);
+}
+
+/* 로그인 페이지 */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 50%, var(--accent-color) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="150" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="150" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="170" cy="170" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="100" cy="100" r="3" fill="rgba(255,255,255,0.05)"/></svg>') repeat;
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.login-card {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  padding: var(--space-10);
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.login-title {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-bold);
+  color: var(--primary-color);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.login-title::before {
+  content: '📚';
+  font-size: var(--font-4xl);
+}
+
+.login-subtitle {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.login-form .form-group {
+  margin-bottom: 0;
+}
+
+.login-form .form-input {
+  height: 48px;
+  border-width: 2px;
+  transition: all var(--transition-normal);
+}
+
+.login-form .form-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+}
+
+.login-btn {
+  height: 48px;
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--secondary-color) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-top: var(--space-4);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+.login-error {
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-4);
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.login-footer {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-200);
+  text-align: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.login-footer-title {
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.test-accounts {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.test-account {
+  padding: var(--space-2);
+  background-color: var(--gray-100);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+
+/* 관리자 대시보드 */
+.admin-dashboard {
+  padding: var(--space-8);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  color: #ffffff !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-title {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-bold);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: #ffffff !important;
+}
+
+.admin-title::before {
+  content: '👨‍💼';
+  font-size: var(--font-4xl);
+}
+
+/* 대시보드 카드들 특별 스타일링 */
+.dashboard-grid .dashboard-card:nth-child(1) {
+  border-left: 4px solid var(--accent-color);
+}
+
+.dashboard-grid .dashboard-card:nth-child(1) .dashboard-card-icon::before {
+  content: '👥';
+}
+
+.dashboard-grid .dashboard-card:nth-child(2) {
+  border-left: 4px solid var(--secondary-color);
+}
+
+.dashboard-grid .dashboard-card:nth-child(2) .dashboard-card-icon::before {
+  content: '📖';
+}
+
+.dashboard-grid .dashboard-card:nth-child(3) {
+  border-left: 4px solid var(--success-color);
+}
+
+.dashboard-grid .dashboard-card:nth-child(3) .dashboard-card-icon::before {
+  content: '🔄';
+}
+
+/* 검색/필터 영역 개선 */
+.search-section {
+  background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow-md);
+}
+
+.search-title {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  color: var(--primary-color);
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-title::before {
+  content: '🔍';
+  font-size: var(--font-xl);
+}
+
+/* 테이블 액션 버튼들 */
+.table-actions {
+  display: flex;
+  gap: var(--space-1);
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.table-actions .btn {
+  min-width: auto;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-xs);
+  min-height: 32px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* 상태 표시 개선 */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-available {
+  background-color: rgba(39, 174, 96, 0.1);
+  color: var(--success-color);
+}
+
+.status-available::before {
+  background-color: var(--success-color);
+}
+
+.status-unavailable {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--danger-color);
+}
+
+.status-unavailable::before {
+  background-color: var(--danger-color);
+}
+
+/* 모달 개선 */
+.modal-overlay {
+  background: rgba(44, 62, 80, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--gray-200);
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: auto;
+  padding: var(--space-8);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--gray-100);
+}
+
+.modal-title {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: var(--font-2xl);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+  background-color: var(--gray-100);
+  color: var(--text-primary);
+}
+
+/* 애니메이션 효과 */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.bounce-in {
+  animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 도서관 테마 장식 요소 */
+.decorative-books {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 2rem;
+  opacity: 0.1;
+  transform: rotate(15deg);
+}
+
+.decorative-books::before {
+  content: '📚📖📕📗📘📙';
+  letter-spacing: 10px;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  :root {
+    --gray-200: #999999;
+    --gray-300: #777777;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* 프린트 스타일 */
+@media print {
+  .header-nav,
+  .section-actions,
+  .table-actions,
+  .pagination,
+  .btn {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    box-shadow: none;
+    border: 1px solid #000;
   }
 }

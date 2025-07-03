@@ -1,0 +1,118 @@
+
+:root {
+    /* 색상 팔레트 - 현대적인 도서관 테마 */
+    --primary-color: #2c3e50;          /* 딥 네이비 */
+    --primary-light: #34495e;          /* 라이트 네이비 */
+    --primary-dark: #1a252f;           /* 다크 네이비 */
+
+    --secondary-color: #e67e22;        /* 따뜻한 오렌지 */
+    --secondary-light: #f39c12;        /* 골든 옐로우 */
+    --secondary-dark: #d35400;         /* 딥 오렌지 */
+
+    --accent-color: #3498db;           /* 브라이트 블루 */
+    --accent-light: #5dade2;           /* 라이트 블루 */
+    --accent-dark: #2980b9;            /* 딥 블루 */
+
+    /* 상태 색상 */
+    --success-color: #27ae60;          /* 그린 */
+    --success-light: #2ecc71;          /* 라이트 그린 */
+    --warning-color: #f39c12;          /* 오렌지 */
+    --danger-color: #e74c3c;           /* 레드 */
+    --danger-light: #ec7063;           /* 라이트 레드 */
+
+    /* 뉴트럴 색상 */
+    --white: #ffffff;
+    --light-gray: #f8f9fa;
+    --gray-100: #ecf0f1;
+    --gray-200: #d5dbdb;
+    --gray-300: #bdc3c7;
+    --gray-400: #95a5a6;
+    --gray-500: #7f8c8d;
+    --gray-600: #5d6d7e;
+    --gray-700: #34495e;
+    --gray-800: #2c3e50;
+    --gray-900: #1a252f;
+    --black: #000000;
+
+    /* 폰트 */
+    --font-primary: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Fira Code', 'Consolas', monospace;
+
+    /* 폰트 크기 */
+    --font-xs: 0.75rem;    /* 12px */
+    --font-sm: 0.875rem;   /* 14px */
+    --font-base: 1rem;     /* 16px */
+    --font-lg: 1.125rem;   /* 18px */
+    --font-xl: 1.25rem;    /* 20px */
+    --font-2xl: 1.5rem;    /* 24px */
+    --font-3xl: 1.875rem;  /* 30px */
+    --font-4xl: 2.25rem;   /* 36px */
+
+    /* 폰트 굵기 */
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* 간격 */
+    --space-1: 0.25rem;    /* 4px */
+    --space-2: 0.5rem;     /* 8px */
+    --space-3: 0.75rem;    /* 12px */
+    --space-4: 1rem;       /* 16px */
+    --space-5: 1.25rem;    /* 20px */
+    --space-6: 1.5rem;     /* 24px */
+    --space-8: 2rem;       /* 32px */
+    --space-10: 2.5rem;    /* 40px */
+    --space-12: 3rem;      /* 48px */
+    --space-16: 4rem;      /* 64px */
+    --space-20: 5rem;      /* 80px */
+
+    /* 보더 반경 */
+    --radius-sm: 0.25rem;  /* 4px */
+    --radius-md: 0.5rem;   /* 8px */
+    --radius-lg: 0.75rem;  /* 12px */
+    --radius-xl: 1rem;     /* 16px */
+    --radius-2xl: 1.5rem;  /* 24px */
+    --radius-full: 9999px;
+
+    /* 그림자 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+    /* 전환 효과 */
+    --transition-fast: 0.15s ease-in-out;
+    --transition-normal: 0.3s ease-in-out;
+    --transition-slow: 0.5s ease-in-out;
+
+    /* Z-인덱스 */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+}
+
+/* 다크 모드 변수 (추후 확장용) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: var(--gray-900);
+        --bg-secondary: var(--gray-800);
+        --text-primary: var(--white);
+        --text-secondary: var(--gray-300);
+    }
+}
+
+/* 라이트 모드 기본값 */
+:root {
+    --bg-primary: var(--white);
+    --bg-secondary: var(--light-gray);
+    --text-primary: var(--gray-900);
+    --text-secondary: var(--gray-600);
+}

@@ -18,8 +18,8 @@ const Login = ({ setCurrentView, setUser, setToken }) => {
                 setToken(data.accessToken);
                 localStorage.setItem('token', data.accessToken);
                 localStorage.setItem('refreshToken', data.refreshToken);
-                localStorage.setItem('userRole', data.role); // 역할 정보 저장
-                localStorage.setItem('loginId', data.loginId); // 로그인 ID도 저장
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('loginId', data.loginId);
                 setUser({ loginId: data.loginId, role: data.role });
 
                 if (data.role === 'ADMIN') {
@@ -36,36 +36,48 @@ const Login = ({ setCurrentView, setUser, setToken }) => {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
-            <h2>도서관 로그인</h2>
-            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-            <form onSubmit={handleLogin}>
-                <div style={{ marginBottom: '10px' }}>
-                    <label>아이디:</label>
-                    <input
-                        type="text"
-                        value={loginData.loginId}
-                        onChange={(e) => setLoginData({...loginData, loginId: e.target.value})}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-                        required
-                    />
+        <div className="login-container">
+            <div className="login-card fade-in">
+                <div className="login-header">
+                    <h2 className="login-title">도서관 로그인</h2>
+                    <p className="login-subtitle">계정으로 로그인하세요</p>
                 </div>
-                <div style={{ marginBottom: '20px' }}>
-                    <label>비밀번호:</label>
-                    <input
-                        type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-                        required
-                    />
+
+                {error && <div className="login-error">{error}</div>}
+
+                <form onSubmit={handleLogin} className="login-form">
+                    <div className="form-group">
+                        <label className="form-label">아이디:</label>
+                        <input
+                            type="text"
+                            className="form-input"
+                            value={loginData.loginId}
+                            onChange={(e) => setLoginData({...loginData, loginId: e.target.value})}
+                            placeholder="아이디를 입력하세요"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">비밀번호:</label>
+                        <input
+                            type="password"
+                            className="form-input"
+                            value={loginData.password}
+                            onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                            placeholder="비밀번호를 입력하세요"
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="login-btn">로그인</button>
+                </form>
+
+                <div className="login-footer">
+                    <p className="login-footer-title">테스트 계정:</p>
+                    <div className="test-accounts">
+                        <div className="test-account">관리자: jihun5788 / jihun1</div>
+                        <div className="test-account">사용자: user01 / user123</div>
+                    </div>
                 </div>
-                <button type="submit" style={{ width: '100%', padding: '10px' }}>로그인</button>
-            </form>
-            <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '14px', color: '#666' }}>
-                <p>테스트 계정:</p>
-                <p>관리자: jihun5788 / jihun1</p>
-                <p>사용자: user01 / user123</p>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
 import MemberManagement from './components/MemberManagement';
@@ -10,9 +11,8 @@ const App = () => {
   const [currentView, setCurrentView] = useState('login');
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(true);
 
-  // JWT 토큰에서 사용자 정보 파싱
   const parseJWT = (token) => {
     try {
       const base64Url = token.split('.')[1];
@@ -27,10 +27,8 @@ const App = () => {
     }
   };
 
-  // currentView 변경 시 localStorage에 저장하는 헬퍼 함수
   const handleSetCurrentView = (view) => {
     setCurrentView(view);
-    // login 페이지가 아닐 때만 저장 (로그아웃 시 login으로 가는 것은 저장하지 않음)
     if (view !== 'login') {
       localStorage.setItem('currentView', view);
     } else {
@@ -38,7 +36,6 @@ const App = () => {
     }
   };
 
-  // 로그아웃 함수
   const logout = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
@@ -55,15 +52,14 @@ const App = () => {
 
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('currentView'); // currentView도 제거
-    localStorage.removeItem('userRole'); // 역할 정보도 제거
-    localStorage.removeItem('loginId'); // 로그인 ID도 제거
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('loginId');
     setToken(null);
     setUser(null);
     setCurrentView('login');
   };
 
-  // 초기 로드시 토큰 확인 및 자동 로그인
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem('token');
@@ -73,7 +69,6 @@ const App = () => {
         console.log('저장된 토큰 발견, 유효성 검사 중...');
 
         try {
-          // 간단한 API 호출로 토큰 유효성 검사
           const response = await fetch('http://localhost:8081/api/user/books?size=1', {
             headers: { 'Authorization': `Bearer ${storedToken}` }
           });
@@ -81,7 +76,6 @@ const App = () => {
           if (response.ok) {
             console.log('토큰 유효함, 자동 로그인 처리');
 
-            // localStorage에서 사용자 정보 가져오기
             const userRole = localStorage.getItem('userRole') || 'USER';
             const loginId = localStorage.getItem('loginId') || 'unknown';
 
@@ -90,31 +84,25 @@ const App = () => {
             setToken(storedToken);
             setUser({ loginId, role: userRole });
 
-            // 저장된 currentView가 있고, 권한이 맞으면 복원
             const savedView = localStorage.getItem('currentView');
 
             if (savedView) {
-              // 관리자가 아닌데 관리자 페이지에 접근하려 하면 기본 페이지로
               const adminPages = ['admin', 'memberManagement', 'bookManagement', 'loanManagement'];
 
               if (adminPages.includes(savedView) && userRole !== 'ADMIN') {
                 handleSetCurrentView('userBooks');
               } else if (userRole === 'ADMIN' && savedView === 'userBooks') {
-                // 관리자인데 userBooks 페이지면 그대로 유지
                 handleSetCurrentView(savedView);
               } else {
-                // 권한이 맞으면 저장된 페이지로 복원
                 handleSetCurrentView(savedView);
               }
             } else {
-              // 저장된 페이지가 없으면 기본 페이지로
               handleSetCurrentView(userRole === 'ADMIN' ? 'admin' : 'userBooks');
             }
 
           } else if (response.status === 401) {
             console.log('토큰 만료, 갱신 시도...');
 
-            // 토큰 갱신 시도
             const refreshResponse = await fetch('http://localhost:8081/api/auth/refresh', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -131,7 +119,6 @@ const App = () => {
               setToken(refreshData.accessToken);
               setUser({ loginId: refreshData.loginId, role: refreshData.role });
 
-              // 토큰 갱신 후에도 저장된 페이지 복원
               const savedView = localStorage.getItem('currentView');
 
               if (savedView) {
@@ -177,31 +164,24 @@ const App = () => {
         setCurrentView('login');
       }
 
-      setIsLoading(false); // 로딩 완료
+      setIsLoading(false);
     };
 
     initializeAuth();
   }, []);
 
-  // 로딩 화면
   if (isLoading) {
     return (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#f5f5f5'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <h3>도서관 관리 시스템</h3>
-            <p>로딩 중...</p>
+        <div className="App">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <h3 className="loading-text">도서관 관리 시스템</h3>
+            <p style={{ color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>로딩 중...</p>
           </div>
         </div>
     );
   }
 
-  // 현재 뷰에 따라 컴포넌트 렌더링
   const renderCurrentView = () => {
     switch (currentView) {
       case 'login':
@@ -261,7 +241,7 @@ const App = () => {
   };
 
   return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      <div className="App">
         {renderCurrentView()}
       </div>
   );
